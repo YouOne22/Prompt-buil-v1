@@ -24,9 +24,13 @@ export async function POST(request: NextRequest) {
     const isBackgroundOnly = extractMode === "background_only";
 
     const analysisInstruction = isBackgroundOnly
-      ? `Analisis gambar ini HANYA untuk mengambil elemen LATAR BELAKANG (BACKGROUND), POLA (PATTERN), TEKSTUR, dan PALET WARNA. 
-ABAIKAN SEMUA TULISAN, TEKS, JUDUL, NOMOR, ATAU LOGO YANG ADA PADA GAMBAR REFERENSI. 
-Tugas Anda: Buat deskripsi prompt untuk AI Image Generator agar menghasilkan background/backdrop digital bersih tanpa teks apapun, bergaya CorelDRAW / Adobe Illustrator vector art.`
+      ? `Analisis gambar ini HANYA untuk mengambil elemen LATAR BELAKANG (BACKGROUND), POLA (PATTERN), TEKSTUR, MESH GRADIENT, BENTUK GEOMETRIS, dan PALET WARNA DOMINAN.
+ABAIKAN DAN BUANG SEMUA TULISAN, TEKS, JUDUL, NOMOR, SUBJEK UTAMA, ORANG, ATAU LOGO YANG ADA PADA GAMBAR REFERENSI.
+Tugas Anda: Buat deskripsi prompt terperinci untuk AI Image Generator (Midjourney/Flux/DALL-E) agar menghasilkan background/backdrop digital bersih TANPA TEKS DAN TANPA KONTEN UTAMA APAPUN.
+Format Hasil Deskripsi Harus Mencakup:
+1. LAYOUT & KOMPOSISI BACKGROUND: Jelaskan penataan bidang warna, kurva, garis hiasan, dan tata letak ornamen background persis sesuai referensi.
+2. WARNA & GRADASI: Sebutkan palet warna spesifik, gradasi, serta pencahayaan background.
+3. GAYA VISUAL: Vector art profesional bergaya CorelDRAW / Adobe Illustrator dengan tekstur dan efek visual pendukung.`
       : `Analisis gambar ini sebagai referensi utama (sketsa pensil/layout) untuk pembuatan desain banner/poster digital.
 Tugas Anda adalah mendeskripsikan gambar ini secara sangat detail agar AI Image Generator dapat merekonstruksi ulang sketsa ini menjadi desain digital yang profesional bergaya CorelDRAW & Adobe Illustrator.
 Fokus Analisis:
