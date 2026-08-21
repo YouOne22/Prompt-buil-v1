@@ -274,20 +274,15 @@ export default function PromptStudioBanner() {
                               <div className="flex items-center gap-4 text-sm font-medium">
             <div className="bg-slate-900 border border-slate-700 px-3 py-1.5 rounded-xl text-amber-400 font-mono text-xs flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
-              Credit: 812
+              Desainer
             </div>
-            <a
-              href="#tutorial"
-              className="text-xs text-slate-400 hover:text-white transition-colors flex items-center gap-1"
-            >
-              <HelpCircle size={14} /> Tutorial
-            </a>
+            
             <div className="flex items-center gap-2 border-l border-slate-700 pl-4">
               <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center font-bold text-xs text-white">
                 <User size={14} />
               </div>
               <button className="text-xs text-rose-400 hover:text-rose-300 flex items-center gap-1">
-                <LogOut size={12} /> Logout
+                You-One Art
               </button>
             </div>
           </div>
