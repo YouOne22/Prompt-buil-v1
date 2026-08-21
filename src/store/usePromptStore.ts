@@ -40,12 +40,31 @@ export type PromptStore = {
 };
 
 export const DESIGN_CATEGORIES = [
+  { value: "Spanduk", group: "Outdoor / Indoor" },
+  { value: "X-Banner", group: "Display / Promosi" },
+  { value: "Roll Up Banner", group: "Display / Promosi" },
+  { value: "Baliho", group: "Outdoor" },
+  { value: "Billboard", group: "Outdoor" },
+  { value: "Kartu Nama", group: "Cetak Korporat" },
+  { value: "Poster", group: "Promosi / Event" },
+  { value: "Flyer", group: "Promosi / Event" },
+  { value: "Brosur", group: "Promosi / Event" },
+  { value: "Stiker", group: "Merchandise" },
   { value: "Event", group: "Event" },
   { value: "Produk", group: "Produk" },
   { value: "Karakter", group: "Karakter" },
 ];
 
-export const isEventCategory = (cat: string) => cat === "Event";
+export const isEventCategory = (cat: string) => 
+  ["Event", "Poster", "Flyer", "Brosur"].includes(cat);
+
+export const isBusinessCard = (cat: string) => cat === "Kartu Nama";
+
+export const isProductCategory = (cat: string) => 
+  ["Produk", "Stiker"].includes(cat);
+
+export const isOutdoorCategory = (cat: string) => 
+  ["Spanduk", "Baliho", "Billboard", "X-Banner", "Roll Up Banner"].includes(cat);
 
 export const usePromptStore = create<PromptStore>()(
   persist(

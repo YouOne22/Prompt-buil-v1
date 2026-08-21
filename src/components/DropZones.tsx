@@ -11,6 +11,38 @@ export type FileState = {
 
 type FileSetter = React.Dispatch<React.SetStateAction<FileState>>;
 
+/**
+ * Handles pasting image(s) from clipboard into the designated drop-zone.
+ * Each drop-zone has its own paste handler to update the right field.
+ */
+const handleImagePaste = (
+  e: React.ClipboardEvent,
+  setFiles: FileSetter,
+  mode: "logo" | "subject" | "reference"
+) => {
+  e.preventDefault();
+    const items = e.clipboardData?.items;
+  if (!items) return;
+  for (let i = 0; i < items.length; i++) {
+    const item = items[i];
+    if (item.kind === "file" && item.type.startsWith("image/")) {
+      const file = item.getAsFile();
+      if (!file) continue;
+      setFiles((prev) => {
+        if (mode === "logo") {
+          return { ...prev, logo: [...prev.logo, file] };
+        }
+        if (mode === "subject") {
+          return { ...prev, subject: [...prev.subject, file] };
+        }
+        // reference (single file)
+        return { ...prev, reference: file };
+      });
+    }
+  }
+};
+
+
 /* ── Logo ──────────────────────────────────────────── */
 export function LogoDropZone({
   files,
@@ -26,14 +58,16 @@ export function LogoDropZone({
   });
 
   return (
-    <div
-      {...getRootProps()}
+        <div
+      {...getRootProps({
+        onPaste: (e) => handleImagePaste(e, setFiles, "logo"),
+      })}
       className="border-2 border-dashed border-gray-300 hover:border-blue-500 bg-gray-50 hover:bg-blue-50/50 p-3 rounded-lg text-center cursor-pointer transition-colors"
     >
       <input {...getInputProps()} />
       <Upload className="mx-auto text-gray-400 mb-1" size={18} />
       <p className="text-xs text-gray-600 font-medium">
-        Upload Logo (Drag & Drop)
+        Upload Logo (Drag & Drop, Upload, or Paste)
       </p>
       {files.logo.length > 0 && (
         <p className="text-[10px] text-blue-600 font-bold mt-1">
@@ -59,14 +93,16 @@ export function SubjectDropZone({
   });
 
   return (
-    <div
-      {...getRootProps()}
+        <div
+      {...getRootProps({
+        onPaste: (e) => handleImagePaste(e, setFiles, "subject"),
+      })}
       className="border-2 border-dashed border-gray-300 hover:border-blue-500 bg-gray-50 hover:bg-blue-50/50 p-3 rounded-lg text-center cursor-pointer transition-colors"
     >
       <input {...getInputProps()} />
       <FileImage className="mx-auto text-gray-400 mb-1" size={18} />
       <p className="text-xs text-gray-600 font-medium">
-        Foto Produk / Subjek Utama
+        Foto Produk / Subjek Utama (Paste juga)
       </p>
       {files.subject.length > 0 && (
         <p className="text-[10px] text-blue-600 font-bold mt-1">
@@ -102,7 +138,9 @@ export function ReferenceDropZone({
   return (
     <div className="space-y-2">
       <div
-        {...getRootProps()}
+                {...getRootProps({
+          onPaste: (e) => handleImagePaste(e, setFiles, "reference"),
+        })}
         className="border-2 border-dashed border-blue-300 hover:border-blue-600 bg-blue-50/30 hover:bg-blue-50 p-4 rounded-xl text-center cursor-pointer transition-colors"
       >
         <input {...getInputProps()} />

@@ -2,7 +2,13 @@
 
 import React, { useState } from "react";
 import { usePromptStore } from "@/store/usePromptStore";
-import { DESIGN_CATEGORIES, isEventCategory } from "@/store/usePromptStore";
+import { 
+  DESIGN_CATEGORIES, 
+  isEventCategory, 
+  isBusinessCard, 
+  isProductCategory, 
+  isOutdoorCategory 
+} from "@/store/usePromptStore";
 import {
   LogoDropZone,
   SubjectDropZone,
@@ -243,7 +249,7 @@ export default function PromptStudioBanner() {
     addHistory(JSON.stringify(formattedPrompt, null, 2));
   };
 
-  return (
+        return (
     <main className="min-h-screen bg-slate-900 text-slate-100 p-4 sm:p-8">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
@@ -265,7 +271,7 @@ export default function PromptStudioBanner() {
             </div>
           </div>
 
-          <div className="flex items-center gap-4 text-sm font-medium">
+                              <div className="flex items-center gap-4 text-sm font-medium">
             <div className="bg-slate-900 border border-slate-700 px-3 py-1.5 rounded-xl text-amber-400 font-mono text-xs flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
               Credit: 812
@@ -337,7 +343,7 @@ export default function PromptStudioBanner() {
               </div>
 
               {isEventCategory(formData.kategoriDesain) && (
-                <div className="space-y-2">
+                                <div className="space-y-2">
                   <div>
                     <label className="text-xs text-slate-400 block mb-1">Tanggal Acara</label>
                     <input
@@ -364,6 +370,32 @@ export default function PromptStudioBanner() {
                       placeholder="Contoh: Aula Utama, Gedung A"
                       value={formData.lokasiAcara}
                       onChange={(e) => setField("lokasiAcara", e.target.value)}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {isBusinessCard(formData.kategoriDesain) && (
+                <div className="space-y-2 bg-slate-900/50 p-3 rounded-xl border border-slate-700/50">
+                  <span className="text-[10px] text-amber-400 font-bold uppercase tracking-wider block">Informasi Kartu Nama</span>
+                  <div>
+                    <label className="text-xs text-slate-400 block mb-1">Nama Lengkap / Jabatan</label>
+                    <input
+                      type="text"
+                      className="w-full bg-slate-900 border border-slate-700 focus:border-blue-500 rounded-lg p-1.5 text-xs text-white outline-none"
+                      placeholder="e.g. John Doe, S.Kom. (Manager)"
+                      value={formData.subJudul}
+                      onChange={(e) => setField("subJudul", e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-slate-400 block mb-1">Nama Perusahaan / Brand</label>
+                    <input
+                      type="text"
+                      className="w-full bg-slate-900 border border-slate-700 focus:border-blue-500 rounded-lg p-1.5 text-xs text-white outline-none"
+                      placeholder="e.g. PT Maju Jaya Mandiri"
+                      value={formData.judulUtama}
+                      onChange={(e) => setField("judulUtama", e.target.value)}
                     />
                   </div>
                 </div>
@@ -668,7 +700,7 @@ export default function PromptStudioBanner() {
               {generatedJson}
             </pre>
           </div>
-        )}
+                )}
       </div>
     </main>
   );
