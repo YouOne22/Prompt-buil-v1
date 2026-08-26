@@ -399,23 +399,23 @@ export default function PromptStudioBanner() {
 
               <div>
                 <label className="text-xs text-slate-400 block mb-1">Judul Utama</label>
-                <input
-                  type="text"
-                  className="w-full bg-slate-900 border border-slate-700 focus:border-blue-500 rounded-lg p-2.5 text-xs text-white outline-none transition-all"
+                <textarea
+                  rows={2}
+                  className="w-full bg-slate-900 border border-slate-700 focus:border-blue-500 rounded-lg p-2.5 text-xs text-white outline-none transition-all resize-none"
                   placeholder="e.g. PROMO MERDEKA, Happy Guardian"
                   value={formData.judulUtama}
                   onChange={(e) => setField("judulUtama", e.target.value)}
-                />
+                ></textarea>
               </div>
               <div>
                 <label className="text-xs text-slate-400 block mb-1">Sub Judul</label>
-                <input
-                  type="text"
-                  className="w-full bg-slate-900 border border-slate-700 focus:border-blue-500 rounded-lg p-2.5 text-xs text-white outline-none transition-all"
+                <textarea
+                  rows={2}
+                  className="w-full bg-slate-900 border border-slate-700 focus:border-blue-500 rounded-lg p-2.5 text-xs text-white outline-none transition-all resize-none"
                   placeholder="e.g. Natalia Helynah Sp.J."
                   value={formData.subJudul}
                   onChange={(e) => setField("subJudul", e.target.value)}
-                />
+                ></textarea>
               </div>
               <div>
                 <label className="text-xs text-slate-400 block mb-1">Informasi Data / Deskripsi</label>
@@ -429,13 +429,13 @@ export default function PromptStudioBanner() {
               </div>
               <div>
                 <label className="text-xs text-slate-400 block mb-1">Slogan</label>
-                <input
-                  type="text"
-                  className="w-full bg-slate-900 border border-slate-700 focus:border-blue-500 rounded-lg p-2.5 text-xs text-white outline-none transition-all"
+                <textarea
+                  rows={2}
+                  className="w-full bg-slate-900 border border-slate-700 focus:border-blue-500 rounded-lg p-2.5 text-xs text-white outline-none transition-all resize-none"
                   placeholder="e.g. Cepat, Murah, Enak"
                   value={formData.slogan}
                   onChange={(e) => setField("slogan", e.target.value)}
-                />
+                ></textarea>
               </div>
             </div>
           </section>
