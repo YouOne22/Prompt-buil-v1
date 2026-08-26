@@ -226,6 +226,7 @@ export default function PromptStudioBanner() {
       elemen_ornamen: formData.elemenPendukung
         ? formData.elemenPendukung.split(",").map((s) => s.trim()).filter(Boolean)
         : [],
+      instruksi_khusus: formData.instruksiTambahan || "",
       data_teks: {
         judul_utama: formData.judulUtama || "",
         subjudul: formData.subJudul || "",
