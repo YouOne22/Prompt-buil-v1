@@ -111,7 +111,7 @@ export default function PromptStudioBanner() {
 
   const handleGenerate = async () => {
     setIsAnalyzing(true);
-    let aiVisualAnalysis = "Perpaduan realisme dan seni grafis oriental";
+    let aiVisualAnalysis = "Desain visual profesional, bersih, dan modern";
     let isUsingVision = false;
     let apiErrorMessage: string | null = null;
 
@@ -166,11 +166,29 @@ export default function PromptStudioBanner() {
       : `Template Default / Tema Desain (${formData.temaDesain})`;
     setPromptSourceType(sourceDescription);
 
+    // Deteksi konteks warna otomatis jika tidak diisi
+    const contextText = `${formData.judulUtama} ${formData.subJudul} ${formData.deskripsi} ${formData.kategoriDesain}`.toLowerCase();
+
+    let contextColors: string[] = [];
+    if (contextText.match(/mie|bakso|ayam|makanan|kuliner|restoran|warung|cafe|pedas|seblak|goreng/i)) {
+      contextColors = ["Merah Cabai", "Kuning Kunyit", "Cokelat Warm"];
+    } else if (contextText.match(/kopi|coffee|cafe|boba|minuman|drink|jus|tea|teh/i)) {
+      contextColors = ["Cokelat Espresso", "Krim Creamy", "Hitam Bold"];
+    } else if (contextText.match(/tech|gadget|hp|komputer|laptop|servis|digital|elektronik/i)) {
+      contextColors = ["Biru Cyan", "Hitam Deep", "Perak Accent"];
+    } else if (contextText.match(/diskon|promo|sale|event|konser|bazar|pesta|festival/i)) {
+      contextColors = ["Kuning Bright", "Merah Vibrant", "Ungu Modern"];
+    } else if (contextText.match(/sehat|medis|klinik|apotek|herbal|nature|daun|organik/i)) {
+      contextColors = ["Hijau Segar", "Putih Clean", "Hijau Mint"];
+    } else {
+      contextColors = ["Menyesuaikan Konteks Isi Konten & Tema Visual"];
+    }
+
     const colors = formData.warnaDominan
       ? formData.warnaDominan.split(",").map((c) => c.trim())
       : isUsingVision && !apiErrorMessage
       ? []
-      : ["Marun", "Emas", "Hitam"];
+      : contextColors;
 
     const selectedTheme =
       formData.temaDesain === "Custom (Tulis Sendiri)"
