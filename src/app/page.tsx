@@ -1,13 +1,11 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { usePromptStore } from "@/store/usePromptStore";
 import { 
   DESIGN_CATEGORIES, 
-  isEventCategory, 
-  isBusinessCard, 
-  isProductCategory, 
-  isOutdoorCategory 
+  isEventCategory,
+  isBusinessCard,
 } from "@/store/usePromptStore";
 import {
   LogoDropZone,
@@ -23,11 +21,10 @@ import {
   Copy,
   CheckCircle,
   Wand2,
-  Volume2,
-  HelpCircle,
   User,
-  LogOut,
   Sparkles,
+  History,
+  Save,
 } from "lucide-react";
 
 // Parse size string like "300x200" or "3x1m" into width and height
@@ -45,13 +42,34 @@ const parseDimensions = (sizeStr: string) => {
   return { width: "", height: "", unit: "" };
 };
 
+const splitLines = (value: string) =>
+  value
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+
 export default function PromptStudioBanner() {
-  const { formData, setField, reset, generatedJson, setGeneratedJson, addHistory } = usePromptStore();
+  const {
+    formData,
+    setField,
+    reset,
+    generatedJson,
+    setGeneratedJson,
+    addHistory,
+    inputHistory,
+    saveInputHistory,
+    loadInputHistoryItem,
+    deleteInputHistoryItem,
+    clearInputHistory,
+  } = usePromptStore();
   const [isRecording, setIsRecording] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [promptSourceType, setPromptSourceType] = useState<string>("Template Default");
   const [extractMode, setExtractMode] = useState<"full" | "background_only">("full");
+  const [isInputHistoryOpen, setIsInputHistoryOpen] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+  const recognitionRef = useRef<any>(null);
 
   const [files, setFiles] = useState<FileState>({
     logo: [],
@@ -74,53 +92,91 @@ export default function PromptStudioBanner() {
     }
   };
 
+  const handleSaveInputHistory = () => {
+    saveInputHistory();
+    setSaveSuccess(true);
+    setTimeout(() => setSaveSuccess(false), 2000);
+  };
+
+  const handleLoadInputHistory = (index: number) => {
+    const item = inputHistory[index];
+    if (!item) return;
+    loadInputHistoryItem(item);
+    setFiles({ logo: [], subject: [], reference: null, audio: null });
+    setPromptSourceType("Template Default");
+    setIsInputHistoryOpen(false);
+  };
+
   // Speech Recognition
   const toggleSpeech = () => {
     if (!("webkitSpeechRecognition" in window || "SpeechRecognition" in window)) {
       alert("Fitur Web Speech API tidak didukung di browser ini.");
       return;
     }
+
+    if (isRecording) {
+      recognitionRef.current?.stop();
+      recognitionRef.current = null;
+      setIsRecording(false);
+      return;
+    }
+
     const SpeechRecognition =
       (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     const recognition = new SpeechRecognition();
+    recognitionRef.current = recognition;
     recognition.lang = "id-ID";
     recognition.continuous = true;
-    recognition.interimResults = true;
-
-    if (isRecording) {
-      recognition.stop();
+    recognition.interimResults = false;
+    recognition.onresult = (e: any) => {
+      let transcript = "";
+      for (let i = e.resultIndex; i < e.results.length; ++i) {
+        transcript += e.results[i][0].transcript;
+      }
+      const currentInstruksi = usePromptStore.getState().formData.instruksiTambahan;
+      setField(
+        "instruksiTambahan",
+        currentInstruksi ? `${currentInstruksi}\n${transcript.trim()}` : transcript.trim()
+      );
+    };
+    recognition.onerror = () => {
+      recognitionRef.current = null;
       setIsRecording(false);
-    } else {
-      setIsRecording(true);
+    };
+    recognition.onend = () => {
+      recognitionRef.current = null;
+      setIsRecording(false);
+    };
+    try {
       recognition.start();
-      recognition.onresult = (e: any) => {
-        let transcript = "";
-        for (let i = e.resultIndex; i < e.results.length; ++i) {
-          transcript += e.results[i][0].transcript;
-        }
-        const currentInstruksi = formData.instruksiTambahan;
-        setField(
-          "instruksiTambahan",
-          currentInstruksi ? `${currentInstruksi}\n${transcript}` : transcript
-        );
-      };
-      recognition.onerror = () => setIsRecording(false);
-      recognition.onend = () => setIsRecording(false);
+      setIsRecording(true);
+    } catch {
+      recognitionRef.current = null;
+      setIsRecording(false);
+      alert("Gagal memulai rekaman suara. Coba lagi.");
     }
   };
 
   const handleGenerate = async () => {
     setIsAnalyzing(true);
-    let aiVisualAnalysis = "Desain visual profesional, bersih, dan modern";
-    let isUsingVision = false;
-    let apiErrorMessage: string | null = null;
+
+    try {
+      let aiVisualAnalysis = "Desain visual profesional, bersih, dan modern";
+      let isUsingVision = false;
+      let apiErrorMessage: string | null = null;
 
     if (files.reference) {
       isUsingVision = true;
       try {
         const reader = new FileReader();
-        const base64Promise = new Promise<string>((resolve) => {
-          reader.onload = () => resolve((reader.result as string).split(",")[1]);
+        const base64Promise = new Promise<string>((resolve, reject) => {
+          reader.onload = () => {
+            const result = typeof reader.result === "string" ? reader.result : "";
+            const [, base64 = ""] = result.split(",");
+            if (base64) resolve(base64);
+            else reject(new Error("Gagal membaca file referensi."));
+          };
+          reader.onerror = () => reject(new Error("Gagal membaca file referensi."));
           reader.readAsDataURL(files.reference!);
         });
         const base64Image = await base64Promise;
@@ -157,17 +213,15 @@ export default function PromptStudioBanner() {
         aiVisualAnalysis = `Gaya visual ${formData.temaDesain.toLowerCase()} dengan detail artistik`;
       }
     }
-    setIsAnalyzing(false);
-
-    const sourceDescription = isUsingVision
+      const sourceDescription = isUsingVision
       ? apiErrorMessage
         ? `Fallback Default (API Vision Gagal - ${formData.temaDesain})`
         : "AI Vision Analysis dari Gambar Referensi"
       : `Template Default / Tema Desain (${formData.temaDesain})`;
-    setPromptSourceType(sourceDescription);
+      setPromptSourceType(sourceDescription);
 
     // Deteksi konteks warna otomatis jika tidak diisi
-    const contextText = `${formData.judulUtama} ${formData.subJudul} ${formData.deskripsi} ${formData.kategoriDesain}`.toLowerCase();
+    const contextText = `${formData.judulUtama} ${formData.subJudul} ${formData.deskripsi} ${formData.daftarNamaProduk} ${formData.kategoriDesain}`.toLowerCase();
 
     let contextColors: string[] = [];
     if (contextText.match(/mie|bakso|ayam|makanan|kuliner|restoran|warung|cafe|pedas|seblak|goreng/i)) {
@@ -185,7 +239,7 @@ export default function PromptStudioBanner() {
     }
 
     const colors = formData.warnaDominan
-      ? formData.warnaDominan.split(",").map((c) => c.trim())
+      ? formData.warnaDominan.split(",").map((c) => c.trim()).filter(Boolean)
       : isUsingVision && !apiErrorMessage
       ? []
       : contextColors;
@@ -197,7 +251,7 @@ export default function PromptStudioBanner() {
 
     const formattedPrompt = {
       sumber_analisis: sourceDescription,
-      jenis_desain: `Banner ${formData.orientasi}`,
+      jenis_desain: `${formData.kategoriDesain} ${formData.orientasi}`,
       kategori_desain: formData.kategoriDesain,
       tipe_output: formData.tipeOutput,
             ukuran: (() => {
@@ -215,7 +269,10 @@ export default function PromptStudioBanner() {
         orientasi: formData.orientasi,
       };
     })(),
-      tujuan_penggunaan: `Visual branding bertema ${selectedTheme.toLowerCase()} untuk cetak besar`,
+      tujuan_penggunaan:
+        formData.tipeOutput === "mockup"
+          ? `Mockup preview visual bertema ${selectedTheme.toLowerCase()}`
+          : `Visual branding bertema ${selectedTheme.toLowerCase()} untuk produksi cetak`,
       tema_desain: selectedTheme,
       gaya_visual: `${aiVisualAnalysis}, professional vector graphic art, CorelDRAW vector art style, Adobe Illustrator vector illustration, clean bezier curves, precise geometric shapes, sharp vector linework, flat design elements, graphic design layout, professional commercial graphic art, zero AI artifacts, crisp vector rendering`,
       aturan_integrasi_subjek: {
@@ -242,16 +299,33 @@ export default function PromptStudioBanner() {
           ? `${aiVisualAnalysis}, background artistik dengan resolusi tinggi, 300 DPI print quality`
           : `Latar belakang artistik gaya ${selectedTheme} dengan tekstur visual mendalam, 300 DPI high-res print quality, bebas noise digital`,
       elemen_ornamen: formData.elemenPendukung
-        ? formData.elemenPendukung.split(",").map((s) => s.trim()).filter(Boolean)
+        ? formData.elemenPendukung
+            .split(/[,\r\n]/)
+            .map((s) => s.trim())
+            .filter(Boolean)
         : [],
       instruksi_khusus: formData.instruksiTambahan || "",
+      aset_visual: {
+        logo: files.logo.map((file) => file.name),
+        subjek_utama: files.subject.map((file) => file.name),
+        referensi: files.reference?.name || "",
+        mode_ekstraksi_referensi: files.reference ? extractMode : "",
+        audio: files.audio?.name || "",
+      },
       data_teks: {
         judul_utama: formData.judulUtama || "",
         subjudul: formData.subJudul || "",
-        informasi_tambahan: formData.deskripsi
-          ? formData.deskripsi.split("\n").filter(Boolean)
-          : [],
+        informasi_tambahan: splitLines(formData.deskripsi),
+        daftar_produk_atau_menu: splitLines(formData.daftarNamaProduk),
         kontak: formData.whatsapp || formData.kontakLain || "",
+        media_sosial: {
+          whatsapp: formData.whatsapp || "",
+          instagram: formData.instagram || "",
+          youtube: formData.youtube || "",
+          tiktok: formData.tiktok || "",
+          facebook: formData.facebook || "",
+          kontak_lain: formData.kontakLain || "",
+        },
         alamat: formData.alamat || "",
         cta: formData.slogan || "",
       },
@@ -264,8 +338,12 @@ export default function PromptStudioBanner() {
       }),
     };
 
-    setGeneratedJson(JSON.stringify(formattedPrompt, null, 2));
-    addHistory(JSON.stringify(formattedPrompt, null, 2));
+      const jsonOutput = JSON.stringify(formattedPrompt, null, 2);
+      setGeneratedJson(jsonOutput);
+      addHistory(jsonOutput);
+    } finally {
+      setIsAnalyzing(false);
+    }
   };
 
         return (
@@ -665,8 +743,9 @@ export default function PromptStudioBanner() {
         </div>
 
         {/* Action Controls */}
-        <div className="flex flex-col sm:flex-row gap-4 pt-4">
+        <div className="flex flex-col lg:flex-row gap-3 pt-4">
           <button
+            type="button"
             onClick={handleGenerate}
             disabled={isAnalyzing}
             className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white py-4 rounded-xl font-bold text-base shadow-xl shadow-blue-500/20 flex items-center justify-center gap-3 transition-all cursor-pointer disabled:opacity-50"
@@ -675,12 +754,91 @@ export default function PromptStudioBanner() {
             {isAnalyzing ? "Menganalisis Referensi..." : "Generate Design Prompt ->"}
           </button>
           <button
-            onClick={handleReset}
-            className="bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 py-4 px-8 rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2 cursor-pointer"
+            type="button"
+            onClick={handleSaveInputHistory}
+            className="bg-emerald-700 hover:bg-emerald-600 text-white border border-emerald-500/40 py-4 px-5 rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2 cursor-pointer"
           >
-            <Trash2 size={18} /> Kosongkan Semua Data Form
+            {saveSuccess ? <CheckCircle size={18} /> : <Save size={18} />}
+            {saveSuccess ? "Riwayat Tersimpan" : "Simpan Riwayat Pengisian"}
+          </button>
+          <button
+            type="button"
+            onClick={() => setIsInputHistoryOpen((isOpen) => !isOpen)}
+            className="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 py-4 px-5 rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2 cursor-pointer"
+          >
+            <History size={18} /> Riwayat Form ({inputHistory.length})
+          </button>
+          <button
+            type="button"
+            onClick={handleReset}
+            className="bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 py-4 px-5 rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2 cursor-pointer"
+          >
+            <Trash2 size={18} /> Kosongkan Form
           </button>
         </div>
+
+        {isInputHistoryOpen && (
+          <section className="bg-slate-800 border border-slate-700 rounded-2xl p-5 shadow-lg space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-700 pb-3">
+              <div>
+                <h2 className="text-sm font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-2">
+                  <History size={17} /> Riwayat Pengisian Form
+                </h2>
+                <p className="text-xs text-slate-400 mt-1">
+                  Pilih draf lama, muat kembali ke semua kolom, lalu edit seperlunya.
+                </p>
+              </div>
+              {inputHistory.length > 0 && (
+                <button
+                  type="button"
+                  onClick={clearInputHistory}
+                  className="text-xs text-rose-400 hover:text-rose-300 font-semibold self-start sm:self-auto"
+                >
+                  Hapus Semua Riwayat
+                </button>
+              )}
+            </div>
+
+            {inputHistory.length === 0 ? (
+              <div className="text-center border border-dashed border-slate-700 rounded-xl p-6 text-sm text-slate-400">
+                Belum ada riwayat. Isi kolom lalu tekan “Simpan Riwayat Pengisian”.
+              </div>
+            ) : (
+              <div className="space-y-2 max-h-96 overflow-y-auto pr-1">
+                {inputHistory.map((item, index) => (
+                  <div
+                    key={item.id}
+                    className="bg-slate-900 border border-slate-700 rounded-xl p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                  >
+                    <div className="min-w-0">
+                      <p className="text-sm font-bold text-white truncate">{item.title}</p>
+                      <p className="text-xs text-slate-400 mt-1">
+                        {item.formData.kategoriDesain} · {item.timestamp}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => handleLoadInputHistory(index)}
+                        className="bg-blue-600 hover:bg-blue-500 text-white px-3 py-2 rounded-lg text-xs font-bold transition-colors"
+                      >
+                        Muat ke Form
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => deleteInputHistoryItem(item.id)}
+                        aria-label={`Hapus riwayat ${item.title}`}
+                        className="text-rose-400 hover:text-rose-300 p-2 rounded-lg hover:bg-rose-500/10 transition-colors"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+        )}
 
         {/* Output */}
         {generatedJson && (

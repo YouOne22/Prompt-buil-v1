@@ -28,15 +28,59 @@ export type FormData = {
   instruksiTambahan: string;
 };
 
+export type InputHistoryItem = {
+  id: string;
+  timestamp: string;
+  title: string;
+  formData: FormData;
+};
+
+const FORM_DATA_DEFAULTS: FormData = {
+  orientasi: "Landscape",
+  ukuranBanner: "",
+  warnaDominan: "",
+  temaDesain: "Modern & Minimalist",
+  temaDesainCustom: "",
+  kategoriDesain: "Produk",
+  tipeOutput: "print",
+  judulUtama: "",
+  subJudul: "",
+  deskripsi: "",
+  slogan: "",
+  whatsapp: "",
+  instagram: "",
+  youtube: "",
+  tiktok: "",
+  facebook: "",
+  alamat: "",
+  kontakLain: "",
+  tanggalAcara: "",
+  waktuAcara: "",
+  lokasiAcara: "",
+  daftarNamaProduk: "",
+  elemenPendukung: "",
+  instruksiTambahan: "",
+};
+
+const normalizeFormData = (formData: Partial<FormData>): FormData => ({
+  ...FORM_DATA_DEFAULTS,
+  ...formData,
+});
+
 export type PromptStore = {
   formData: FormData;
   generatedJson: string | null;
   history: string[];
+  inputHistory: InputHistoryItem[];
   setField: <K extends keyof FormData>(field: K, value: FormData[K]) => void;
   reset: () => void;
   setGeneratedJson: (json: string) => void;
   addHistory: (json: string) => void;
   loadHistory: () => void;
+  saveInputHistory: (customTitle?: string) => void;
+  loadInputHistoryItem: (item: InputHistoryItem) => void;
+  deleteInputHistoryItem: (id: string) => void;
+  clearInputHistory: () => void;
 };
 
 export const DESIGN_CATEGORIES = [
@@ -97,6 +141,7 @@ export const usePromptStore = create<PromptStore>()(
       },
       generatedJson: null,
       history: [],
+      inputHistory: [],
       setField: (field, value) =>
         set((state) => ({
           formData: { ...state.formData, [field]: value }
@@ -144,12 +189,54 @@ export const usePromptStore = create<PromptStore>()(
             if (Array.isArray(arr)) set(() => ({ history: arr }));
           } catch (_) {}
         }
-      }
+      },
+      saveInputHistory: (customTitle) => {
+        const currentData = get().formData;
+        const now = new Date();
+        const timestamp = now.toLocaleString("id-ID", {
+          dateStyle: "short",
+          timeStyle: "short",
+        });
+        const autoTitle =
+          currentData.judulUtama ||
+          currentData.kategoriDesain ||
+          currentData.instruksiTambahan?.slice(0, 25) ||
+          "Draf Input Form";
+        const title = customTitle || autoTitle;
+
+        const newItem: InputHistoryItem = {
+          id: Date.now().toString(),
+          timestamp,
+          title,
+          formData: { ...currentData },
+        };
+
+        set((state) => ({
+          inputHistory: [newItem, ...state.inputHistory].slice(0, 50),
+        }));
+      },
+      loadInputHistoryItem: (item) => {
+        set(() => ({
+          formData: normalizeFormData(item.formData),
+          generatedJson: null,
+        }));
+      },
+      deleteInputHistoryItem: (id) => {
+        set((state) => ({
+          inputHistory: state.inputHistory.filter((item) => item.id !== id),
+        }));
+      },
+      clearInputHistory: () => {
+        set(() => ({ inputHistory: [] }));
+      },
     }),
     {
       name: "prompt-store",
       storage: createJSONStorage(() => localStorage),
-      partialize: (state) => ({ history: state.history })
+      partialize: (state) => ({
+        history: state.history,
+        inputHistory: state.inputHistory,
+      })
     }
   )
 );
