@@ -117,7 +117,6 @@ export const usePromptStore = create<PromptStore>()(
     (set, get) => ({
       formData: {
         orientasi: "Landscape",
-        ukuranBanner: "",
         lebarBanner: "",
         tinggiBanner: "",
         warnaDominan: "",
