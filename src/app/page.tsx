@@ -255,17 +255,15 @@ export default function PromptStudioBanner() {
       kategori_desain: formData.kategoriDesain,
       tipe_output: formData.tipeOutput,
             ukuran: (() => {
-        const { width, height, unit } = parseDimensions(formData.ukuranBanner || "");
-        
         // Hitung rasio dinamis berdasarkan input
-        const w = parseFloat(width) || 1;
-        const h = parseFloat(height) || 1;
+        const w = parseFloat(formData.lebarBanner) || 1;
+        const h = parseFloat(formData.tinggiBanner) || 1;
         const ratio = (w / h).toFixed(2);
 
         return {
-          lebar: width || formData.ukuranBanner || "A3",
-          tinggi: height || formData.ukuranBanner || "A3",
-          satuan: unit || (width ? "piksel (px)" : "ISO 216 / 300 DPI High Resolution"),
+          lebar: formData.lebarBanner || "A3",
+          tinggi: formData.tinggiBanner || "A3",
+          satuan: "cm",
           rasio: `${ratio}:1`,
           orientasi: formData.orientasi,
         };
@@ -645,15 +643,27 @@ export default function PromptStudioBanner() {
                 </select>
               </div>
 
-              <div>
-                <label className="text-xs text-slate-400 block mb-1">Ukuran Banner</label>
-                <input
-                  type="text"
-                  className="w-full bg-slate-900 border border-slate-700 focus:border-blue-500 rounded-lg p-2 text-xs text-white outline-none"
-                                    placeholder="e.g. 300x200, 3x1m, A3"
-                  value={formData.ukuranBanner}
-                  onChange={(e) => setField("ukuranBanner", e.target.value)}
-                />
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="text-xs text-slate-400 block mb-1">Lebar</label>
+                  <input
+                    type="text"
+                    className="w-full bg-slate-900 border border-slate-700 focus:border-blue-500 rounded-lg p-2 text-xs text-white outline-none"
+                    placeholder="e.g. 120"
+                    value={formData.lebarBanner}
+                    onChange={(e) => setField("lebarBanner", e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="text-xs text-slate-400 block mb-1">Tinggi</label>
+                  <input
+                    type="text"
+                    className="w-full bg-slate-900 border border-slate-700 focus:border-blue-500 rounded-lg p-2 text-xs text-white outline-none"
+                    placeholder="e.g. 600"
+                    value={formData.tinggiBanner}
+                    onChange={(e) => setField("tinggiBanner", e.target.value)}
+                  />
+                </div>
               </div>
 
               <div>

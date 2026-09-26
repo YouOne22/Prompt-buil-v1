@@ -3,7 +3,8 @@ import { persist, createJSONStorage } from "zustand/middleware";
 
 export type FormData = {
   orientasi: "Landscape" | "Portrait" | "Square";
-  ukuranBanner: string;
+  lebarBanner: string;
+  tinggiBanner: string;
   warnaDominan: string;
   temaDesain: string;
   temaDesainCustom: string;
@@ -37,7 +38,8 @@ export type InputHistoryItem = {
 
 const FORM_DATA_DEFAULTS: FormData = {
   orientasi: "Landscape",
-  ukuranBanner: "",
+  lebarBanner: "",
+  tinggiBanner: "",
   warnaDominan: "",
   temaDesain: "Modern & Minimalist",
   temaDesainCustom: "",
@@ -116,6 +118,8 @@ export const usePromptStore = create<PromptStore>()(
       formData: {
         orientasi: "Landscape",
         ukuranBanner: "",
+        lebarBanner: "",
+        tinggiBanner: "",
         warnaDominan: "",
         temaDesain: "Modern & Minimalist",
         temaDesainCustom: "",
@@ -150,7 +154,8 @@ export const usePromptStore = create<PromptStore>()(
         set(() => ({
           formData: {
             orientasi: "Landscape",
-            ukuranBanner: "",
+            lebarBanner: "",
+            tinggiBanner: "",
             warnaDominan: "",
             temaDesain: "Modern & Minimalist",
             temaDesainCustom: "",
@@ -240,3 +245,13 @@ export const usePromptStore = create<PromptStore>()(
     }
   )
 );
+
+
+
+
+
+
+
+
+
+
