@@ -256,18 +256,19 @@ export default function PromptStudioBanner() {
       tipe_output: formData.tipeOutput,
             ukuran: (() => {
         const { width, height, unit } = parseDimensions(formData.ukuranBanner || "");
+        
+        // Hitung rasio dinamis berdasarkan input
+        const w = parseFloat(width) || 1;
+        const h = parseFloat(height) || 1;
+        const ratio = (w / h).toFixed(2);
+
         return {
           lebar: width || formData.ukuranBanner || "A3",
           tinggi: height || formData.ukuranBanner || "A3",
           satuan: unit || (width ? "piksel (px)" : "ISO 216 / 300 DPI High Resolution"),
-                rasio:
-          formData.orientasi === "Landscape"
-            ? "1.41:1"
-            : formData.orientasi === "Portrait"
-            ? "1:1.41"
-            : "1:1",
-        orientasi: formData.orientasi,
-      };
+          rasio: `${ratio}:1`,
+          orientasi: formData.orientasi,
+        };
     })(),
       tujuan_penggunaan:
         formData.tipeOutput === "mockup"
